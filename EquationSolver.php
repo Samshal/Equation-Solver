@@ -70,12 +70,17 @@ class Solve
 		$this->equation = self::purify($parameter);
 		if (!self::verify())
 		{
-			return self::process_error(true);
+			return self::process_error("Your equation contains some characters which makes it invalid and unsolvable. Please remove this character(s).", true);
 		}
 		$this->variable = self::get_variable()[0];
 		$this->equationType = self::get_equationType();
+		//$this->variable." = ".$solution[$this->variable];
+	}
+	public function solution()
+	{
 		$solution = self::assign_solver();
-		print $this->variable." = ".$solution[$this->variable];
+		$returnVal = array($this->variable, $solution);
+		return $returnVal;
 	}
 	/*-------------------------------------
 	 * Instantiation of the purify method.
@@ -118,6 +123,8 @@ class Solve
 	public function verify()
 	{
 		$sides = explode("=", $this->equation);
+		$lIndex = $this->equation[strlen($this->equation)-1];
+		$rIndex = $this->equation[0];
 		if (count($sides) != 2)
 		{
 			//we have a problem: either no equals sign was provided or too many were supplied
@@ -127,10 +134,35 @@ class Solve
 		{
 			return false;
 		}
-		else
+		else if (strstr("*-+/\\&^%$#@!()[]{}<>.,_", $lIndex) || strstr("*/\\&^%$#@!<>.,_", $rIndex))
 		{
-			return true;
+			return false;
 		}
+		for ($i = 0; $i < strlen($this->equation); $i++)
+		{
+			if (strstr("\\&^%$@!<>,_", $this->equation[$i]))
+			{
+				return false;
+				break;
+			}
+			if (strstr("+", $this->equation[$i]))
+			{
+				if (strstr("+-*/", $this->equation[$i+1]) || strstr("+-*/", $this->equation[$i-1]))
+				{
+					return false;
+					break;
+				}
+			}
+			if (strstr(".", $this->equation[$i]))
+			{
+				if (!is_numeric($this->equation[$i-1]) || !is_numeric($this->equation[$i+1]))
+				{
+					return false;
+					break;
+				}
+			}
+		}
+		return true;
 	}
 	/*-------------------------------------
 	 * Instantiation of the get_variable method
@@ -217,6 +249,10 @@ class Solve
 		{
 			$lhs = "+".$lhs;
 		}
+		else if (!is_numeric(substr($lhs, 0, 1)))
+		{
+			$lhs = "+1".$lhs;
+		}
 		for ($i = 0, $j = strlen($lhs); $i < $j; $i++)
 		{
 			if (strstr("+-", $lhs[$i]))
@@ -242,6 +278,10 @@ class Solve
 		if (is_numeric(substr($rhs, 0, 1)))
 		{
 			$rhs = "+".$rhs;
+		}
+		else if (!is_numeric(substr($rhs, 0, 1)))
+		{
+			$rhs = "+1".$rhs;
 		}
 		for ($i = 0, $j = strlen($rhs); $i < $j; $i++)
 		{
@@ -322,12 +362,127 @@ class Solve
 		{
 			$final_solution = "-".$final_solution;
 		}
-		$toArray = array($this->variable => $final_solution);
+		$toArray = array($final_solution);
 		return $toArray;
 	}
 	public function solve_quadratic()
 	{
-		return "The equation supplied is a quadratic equation. This feature is still being developed";
+		$sides = array();
+		$lhs = explode("=", $this->equation)[0];
+		if (is_numeric(substr($lhs, 0, 1)))
+		{
+			$lhs = "+".$lhs;
+		}
+		else if (!is_numeric(substr($lhs, 0, 1)))
+		{
+			$lhs = "+1".$lhs;
+		}
+		for ($i = 0, $j = strlen($lhs); $i < $j; $i++)
+		{
+			if (strstr("+-", $lhs[$i]))
+			{
+				//$pos = strpos($lhs, $lhs[$i]);
+				//echo $i."<br/>";
+				$positions[] = $i;
+			}
+		}
+		$sides = array();
+		for ($counter = 0; $counter < count($positions); $counter++)
+		{
+			if (isset($positions[$counter + 1]))
+			{
+				$sides[] = substr($lhs, $positions[$counter], $positions[$counter+1] - $positions[$counter]);
+			}
+			else
+			{
+				$sides[] = substr($lhs, $positions[$counter]);
+			}
+		}
+		$rhs = explode("=", $this->equation)[1];
+		if (is_numeric(substr($rhs, 0, 1)))
+		{
+			$rhs = "+".$rhs;
+		}
+		else if (!is_numeric(substr($rhs, 0, 1)))
+		{
+			$rhs = "+1".$rhs;
+		}
+		for ($i = 0, $j = strlen($rhs); $i < $j; $i++)
+		{
+			if (strstr("+-", $rhs[$i]))
+			{
+				//$pos = strpos($lhs, $lhs[$i]);
+				//echo $i."<br/>";
+				$positions_rhs[] = $i;
+			}
+		}
+		if (!isset($positions_rhs))
+		{
+			$positions_rhs[] = "0";
+		}
+		for ($counter = 0; $counter < count($positions_rhs); $counter++)
+		{
+			if (isset($positions_rhs[$counter + 1]))
+			{
+				$string = substr($rhs, $positions_rhs[$counter], $positions_rhs[$counter+1] - $positions_rhs[$counter]);
+			}
+			else
+			{
+				$string = substr($rhs, $positions_rhs[$counter]);
+			}
+			if (substr($string, 0, 1) == "+")
+			{
+				$string = substr_replace($string, "-", 0, 1);
+			}
+			else if (substr($string, 0, 1) == "-")
+			{
+				$string = substr_replace($string, "+", 0, 1);
+			}
+			$sides[] = $string;
+		}
+		for ($counter = 0, $count = count($sides); $counter < $count; $counter++)
+		{
+			$number = $sides[$counter];
+			for ($i = 0, $j = strlen($number); $i < $j; $i++)
+			{
+				if (strstr($this->variable, $number[$i]))
+				{
+					if (strstr("eE", $number[$i+1]))
+					{
+						$a[] = substr($number, 0, -3);
+						unset($sides[$counter]);
+					}
+					else
+					{
+						$b[] = substr($number, 0, -1);
+						unset($sides[$counter]);
+					}
+				}
+			}
+		}
+		$c = $sides;
+		//return array($a, $b, $c);
+		$acoeff = 0;
+		$bcoeff = 0;
+		$ccoeff = 0;
+		foreach ($a as $elem)
+		{
+			$acoeff += $elem;
+		}
+
+		foreach ($b as $elem)
+		{
+			$bcoeff += $elem;
+		}
+
+		foreach ($c as $elem)
+		{
+			$ccoeff += $elem;
+		}
+		$proc = sqrt(($bcoeff * $bcoeff) - (4 * $acoeff * $ccoeff));
+		$sol1 = ((-1 * $bcoeff) + $proc) / (2 * $acoeff);
+		$sol2 = ((-1 * $bcoeff) - $proc) / (2 * $acoeff);
+		return array($sol1, $sol2);
 	}
 }
 ?>
