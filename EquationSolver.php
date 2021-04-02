@@ -49,18 +49,18 @@ class Solve
 	public $equationType;
 	public static $possible_variables = "abcdfghijklmnopqrstuvwxyzABCDFGHIJKLMNOPQRSTUVWXYZ";
 	public static $possible_equationTypes = array(
-													 "0"=>"Polynomial",
-													 "1"=>"Linear",
-													 "2"=>"Quadratic",
-													 "3"=>"Trinomial"
-													);
-		/*---------------------
-		 *instantiation of the constructor for this class.
-		 *It takes two parameters:
-		 *1. The equation to be process and
-		 *2. A boolean parameter indicating whether error should
-		 *	 be displayed (true, 1 or "") or not (false, 0 or "[a-zA-Z0-9]")
-		---------------------*/
+		"0"=>"Polynomial",
+		"1"=>"Linear",
+		"2"=>"Quadratic",
+		"3"=>"Trinomial"
+	);
+	/*---------------------
+	 *instantiation of the constructor for this class.
+	 *It takes two parameters:
+	 *1. The equation to be process and
+	 *2. A boolean parameter indicating whether error should
+	 *	 be displayed (true, 1 or "") or not (false, 0 or "[a-zA-Z0-9]")
+	---------------------*/
 	public function __construct($parameter, $show_errors)
 	{
 		if ($show_errors)
@@ -76,12 +76,14 @@ class Solve
 		$this->equationType = self::get_equationType();
 		//$this->variable." = ".$solution[$this->variable];
 	}
+
 	public function solution()
 	{
 		$solution = self::assign_solver();
 		$returnVal = array($this->variable, $solution);
 		return $returnVal;
 	}
+
 	/*-------------------------------------
 	 * Instantiation of the purify method.
 	 * It accepts a single parameter which is the equation
@@ -90,11 +92,12 @@ class Solve
 	function purify($parameter)
 	{
 		return $purified = str_replace(
-										 " ",
-										 NULL,
-										 trim($parameter)
-									  );
+			" ",
+			NULL,
+			trim($parameter)
+		);
 	}
+
 	/*-------------------------------------
 	 * Instantiation of the process_error class
 	 * which handles the display of errors.
@@ -114,6 +117,7 @@ class Solve
 			echo $msg;
 		}
 	}
+
 	/*-------------------------------------
 	 * Instantiation of the verify method
 	 * It accepts no arguments and performs a 
@@ -164,6 +168,7 @@ class Solve
 		}
 		return true;
 	}
+
 	/*-------------------------------------
 	 * Instantiation of the get_variable method
 	 * This method accepts no parameter/argument
@@ -191,6 +196,7 @@ class Solve
 		}
 		return $variables;
 	}
+
 	/*-------------------------------------
 	 * The get_equationType method accepts no
 	 * parameter. It is responsible for determining
@@ -215,24 +221,26 @@ class Solve
 		$power = self::$possible_equationTypes[$index];
 		return $power;
 	}
+
 	public function assign_solver()
 	{
 		switch ($this->equationType)
 		{
 			case "Linear":
-				return self::solve_linear();
-				break;
+			return self::solve_linear();
+			break;
 			case "Quadratic":
-				return self::solve_quadratic();
-				break;
+			return self::solve_quadratic();
+			break;
 			case "Trinomial":
 			case "Polynomial":
-				return self::process_error("The equation supplied is either a trinomial or polynomial. Algorithms for solving this type of equations are still under construction", false);
-				break;
+			return self::process_error("The equation supplied is either a trinomial or polynomial. Algorithms for solving this type of equations are still under construction", false);
+			break;
 			default:
-				return self::process_error("An error Occurred, please try again or refresh this page", true);
+			return self::process_error("An error Occurred, please try again or refresh this page", true);
 		}
 	}
+
 	public function solve_linear()
 	{
 		for ($i = 0, $j = strlen($this->equation); $i < $j; $i++)
@@ -365,6 +373,7 @@ class Solve
 		$toArray = array($final_solution);
 		return $toArray;
 	}
+	
 	public function solve_quadratic()
 	{
 		$sides = array();
@@ -485,4 +494,5 @@ class Solve
 		return array($sol1, $sol2);
 	}
 }
+
 ?>
